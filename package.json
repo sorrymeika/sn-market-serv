@@ -1,0 +1,18 @@
+{
+  "name": "sn-auth",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./lib/index",
+  "devDependencies": {
+    "eslint": "^6.1.0"
+  },
+  "dependencies": {
+    "ioredis": "^4.11.2",
+    "node-rsa": "^1.0.5"
+  },
+  "scripts": {
+    "dev": "npx supervisor scripts/start.js",
+    "start": "node scripts/start.js",
+    "valid": "node scripts/valid.js"
+  }
+}
