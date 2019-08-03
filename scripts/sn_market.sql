@@ -34,21 +34,24 @@ create table marketTemplate (
     id int(10) primary key auto_increment,
     name varchar(100),
     type int(4),
+    supportPageTypes varchar(100),
     image varchar(100),
-    preview varchar(500),
+    preview varchar(1000),
     html text,
-    css varchar(2048),
+    css text,
+    sorting int(10),
     groupId int(6), -- enum { 1: '图文模块', 2: '商品模块', 3: '智能模块' }
+    status int(1), -- enum { 1: '可用', 0: '不可用' }
     props json
 );
 
--- 页面表
+-- 页面表， 发布和编辑中的页面能够被访问，编辑中的页面数据可从历史表中获取，状态也为编辑中
 create table marketPage (
     id int(10) primary key auto_increment,
     name varchar(100),
     type int(6),
     props json,
-    status int(2) -- enum { 0: '虚拟删除', 1: '编辑', 2: '发布' }
+    status int(2) -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
 )
 
 -- 页面数据表
@@ -64,11 +67,12 @@ create table marketPageData (
 -- 页面历史表
 create table marketPageHistory (
     id int(12) primary key auto_increment,
+    backupName varchar(100),
     pageId int(10),
     name varchar(100),
     type int(6),
     props json,
-    status int(2) -- enum { 0: '虚拟删除', 1: '编辑中', 2: '发布' }
+    status int(2) -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
 )
 
 -- 页面数据历史表

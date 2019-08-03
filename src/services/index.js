@@ -12,15 +12,14 @@ const redis = new Redis(config.redis);
 
 const ctx = {
     mysql,
-    redis,
-    utils: {
-    }
+    redis
 };
 
 module.exports = function start() {
     return createProvider({
+        name: 'market',
         ctx,
-        port: 3005,
+        port: 3007,
         registry: {
             port: 3006
         },

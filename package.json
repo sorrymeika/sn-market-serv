@@ -7,8 +7,7 @@
     "eslint": "^6.1.0"
   },
   "dependencies": {
-    "ioredis": "^4.11.2",
-    "node-rsa": "^1.0.5"
+    "ioredis": "^4.11.2"
   },
   "scripts": {
     "dev": "npx supervisor scripts/start.js",

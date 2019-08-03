@@ -1,11 +1,12 @@
 const fs = require('fs');
 
-if (!fs.existsSync('./node_modules/sonorpc')) {
-    require('child_process').execSync('ln -s ../../sonorpc ./node_modules/sonorpc');
-}
+const ln = (moduleName) => {
+    if (!fs.existsSync('./node_modules/' + moduleName)) {
+        require('child_process').execSync('ln -s ../../' + moduleName + ' ./node_modules/' + moduleName);
+    }
+};
 
-if (!fs.existsSync('./node_modules/sonorpc-mysql')) {
-    require('child_process').execSync('ln -s ../../sonorpc ./node_modules/sonorpc');
-}
+ln('sonorpc');
+ln('sonorpc-mysql');
 
 require('../src/services')();
