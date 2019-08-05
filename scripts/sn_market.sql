@@ -49,38 +49,47 @@ create table marketTemplate (
 create table marketPage (
     id int(10) primary key auto_increment,
     name varchar(100),
-    type int(6),
+    type int(6), -- 页面类型: enum { 1: '首页', 2: '营销页', 3: '店铺首页', 4: '店铺营销页' }
     props json,
-    status int(2) -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
-)
+    status int(2), -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
+    keyName varchar(30), -- 路由
+    unique keyIndex (keyName)
+);
+
+-- 页面、店铺关联表
+create table storePageRel (
+    id int(10) primary key auto_increment,
+    pageId int(10) not null,
+    storeId int(10) not null
+);
 
 -- 页面数据表
-create table marketPageData (
+create table marketBricks (
     id int(12) primary key auto_increment,
     pageId int(10),
     templateId int(10),
     sort int(4),
     data json,
     props json
-)
+);
 
 -- 页面历史表
 create table marketPageHistory (
     id int(12) primary key auto_increment,
-    backupName varchar(100),
     pageId int(10),
     name varchar(100),
-    type int(6),
+    backupName varchar(100),
     props json,
-    status int(2) -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
-)
+    status int(2) -- enum { 0: '虚拟删除', 1: '', 2: '发布', 3: '编辑中' }
+);
 
 -- 页面数据历史表
-create table marketPageDataHistory (
+create table marketBricksHistory (
     id int(12) primary key auto_increment,
     historyId int(12),
+    templateId int(10),
     dataId int(12),
     sort int(4),
     data json,
     props json
-)
+);

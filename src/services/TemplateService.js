@@ -12,7 +12,7 @@ class TemplateService extends Service {
         }
 
         if (name) {
-            where += ' and name like \'%\'+@p' + (i++) + '+\'%\'';
+            where += ' and name like CONCAT(\'%\',@p' + (i++) + ',\'%\')';
             vals.push(name);
         }
 
@@ -51,6 +51,46 @@ class TemplateService extends Service {
             status: 1
         });
         return { success: !!res.insertId, id: res.insertId, data: res };
+    }
+
+    updateTemplate(data) {
+        const {
+            id,
+            name,
+            supportPageTypes,
+            image,
+            preview,
+            html,
+            css,
+            sorting,
+            groupId,
+            props,
+        } = data;
+        const res = this.ctx.mysql.query(
+            `update marketTemplate set 
+                name={name},
+                supportPageTypes={supportPageTypes},
+                image={image},
+                preview={preview},
+                html={html},
+                css={css},
+                sorting={sorting},
+                groupId={groupId},
+                props={props}
+            where id={id}`,
+            {
+                id,
+                name,
+                supportPageTypes,
+                image,
+                preview,
+                html,
+                css,
+                sorting,
+                groupId,
+                props
+            });
+        return { success: true, data: res };
     }
 
     deleteById(templateId) {
