@@ -63,8 +63,16 @@ class PageService extends Service {
         return this.ctx.mysql.query('select id,name,type,props,status from marketPageHistory where status=3 and pageId=@p0 limit 1', [pageId]);
     }
 
+    async _getHistoryId(pageId) {
+        const rows = await this.ctx.mysql.query('select id from marketPageHistory where status=3 and pageId=@p0 limit 1', [pageId]);
+        if (!rows || !rows[0]) {
+            return 0;
+        }
+        return rows[0].id;
+    }
+
     async _getPageStatus(pageId) {
-        const rows = await this.ctx.mysql.query('select status from marketPage where pageId=@p0', [pageId]);
+        const rows = await this.ctx.mysql.query('select status from marketPage where id=@p0', [pageId]);
         if (!rows[0]) return null;
         return rows[0].status;
     }
@@ -117,7 +125,7 @@ class PageService extends Service {
             return PAGE_STATUS_ERROR;
         }
 
-        return { success: true, code: 1, data: insert };
+        return { success: true, code: 1, data: brick };
     }
 
     async updateBrick(pageId, brick) {
@@ -173,6 +181,66 @@ class PageService extends Service {
             return PAGE_STATUS_ERROR;
         }
         return { success: true, code: 1, data: result };
+    }
+
+    async savePage(pageId, historyId, pageName, sortings) {
+        const status = await this._getPageStatus(pageId);
+        if (!status) return PAGE_NOT_EXISTS;
+
+        let results;
+        if (status === 1) {
+            await this.ctx.mysql.query('update marketPage set name={name} where id={id}', {
+                id: pageId,
+                name: pageName
+            });
+            results = await Promise.all(sortings.map(({ id, sort }) => (
+                this.ctx.mysql.query('update marketBricks set sort={sort} where id={id}', {
+                    id,
+                    sort
+                })
+            )));
+        } else if (historyId && status === 3) {
+            await this.ctx.mysql.query('update marketPageHistory set name={name} where id={id}', {
+                id: historyId,
+                name: pageName
+            });
+            results = await Promise.all(sortings.map(({ id, sort }) => (
+                this.ctx.mysql.query('update marketPageHistory set sort={sort} where id={id}', {
+                    id,
+                    sort
+                })
+            )));
+        } else {
+            return PAGE_STATUS_ERROR;
+        }
+        return { success: true, code: 1, data: results };
+    }
+
+    async publishPage(pageId, historyId) {
+        const status = await this._getPageStatus(pageId);
+        if (!status) return PAGE_NOT_EXISTS;
+
+        const results = [];
+        let result;
+        if (status === 1) {
+            result = await this.ctx.mysql.query('update marketPage set status=2 where id={id}', {
+                id: pageId
+            });
+            results.push(result);
+        } else if (historyId && status === 3) {
+            const connection = await this.ctx.mysql.connect();
+            results.push(
+                await connection.query('update marketPage a,marketPageHistory b set a.status=2,b.status=2,a.name=b.name,a.props=b.props where a.id={id} and b.pageId={id}', {
+                    id: pageId
+                })
+            );
+            results.push(await connection.query('delete from marketBricks where pageId=@p0', [pageId]));
+            results.push(await connection.query('insert into marketBricks (pageId,templateId,sort,data,props) select @p0,templateId,sort,data,props from marketBricksHistory where historyId=@p1', [pageId, historyId]));
+            connection.release();
+        } else {
+            return PAGE_STATUS_ERROR;
+        }
+        return { success: true, code: 1, data: results };
     }
 }
 

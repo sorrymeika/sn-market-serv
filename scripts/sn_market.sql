@@ -33,6 +33,7 @@ use sn_market;
 create table marketTemplate (
     id int(10) primary key auto_increment,
     name varchar(100),
+    description varchar(200),
     type int(4),
     supportPageTypes varchar(100),
     image varchar(100),
@@ -45,6 +46,7 @@ create table marketTemplate (
     props json
 );
 
+
 -- 页面表， 发布和编辑中的页面能够被访问，编辑中的页面数据可从历史表中获取，状态也为编辑中
 create table marketPage (
     id int(10) primary key auto_increment,
@@ -56,11 +58,11 @@ create table marketPage (
     unique keyIndex (keyName)
 );
 
--- 页面、店铺关联表
-create table storePageRel (
+-- 页面、商户关联表
+create table sellerPageRel (
     id int(10) primary key auto_increment,
     pageId int(10) not null,
-    storeId int(10) not null
+    sellerId int(10) not null
 );
 
 -- 页面数据表
@@ -68,7 +70,7 @@ create table marketBricks (
     id int(12) primary key auto_increment,
     pageId int(10),
     templateId int(10),
-    sort int(4),
+    sort decimal(18,10),
     data json,
     props json
 );
@@ -89,7 +91,7 @@ create table marketBricksHistory (
     historyId int(12),
     templateId int(10),
     dataId int(12),
-    sort int(4),
+    sort decimal(18,10),
     data json,
     props json
 );

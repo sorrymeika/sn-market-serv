@@ -27,6 +27,7 @@ class TemplateService extends Service {
 
     async addTemplate({
         name,
+        description,
         type,
         supportPageTypes,
         image,
@@ -39,6 +40,7 @@ class TemplateService extends Service {
     }) {
         const res = await this.ctx.mysql.insert('marketTemplate', {
             name,
+            description,
             type,
             supportPageTypes,
             image,
@@ -57,6 +59,7 @@ class TemplateService extends Service {
         const {
             id,
             name,
+            description,
             supportPageTypes,
             image,
             preview,
@@ -69,6 +72,7 @@ class TemplateService extends Service {
         const res = this.ctx.mysql.query(
             `update marketTemplate set 
                 name={name},
+                description={description},
                 supportPageTypes={supportPageTypes},
                 image={image},
                 preview={preview},
@@ -81,6 +85,7 @@ class TemplateService extends Service {
             {
                 id,
                 name,
+                description,
                 supportPageTypes,
                 image,
                 preview,
