@@ -44,11 +44,12 @@ class PageService extends Service {
                     status: 3
                 });
                 // 将编辑中的数据插入历史表中
-                await connection.query('insert into marketBricksHistory (historyId,dataId,sort,data,props)'
-                    + ' select @p0,id,sort,data,props from marketBricks where pageId=@p1', [history.insertId, data.id]);
+                await connection.query('insert into marketBricksHistory (historyId,dataId,templateId,sort,data,props)'
+                    + ' select @p0,id,templateId,sort,data,props from marketBricks where pageId=@p1', [history.insertId, data.id]);
                 // 修改原页面状态
                 await connection.query('update marketPage set status=3 where id=@p0', [data.id]);
                 data.status = 3;
+                data.historyId = history.insertId;
             });
         }
 
@@ -60,7 +61,7 @@ class PageService extends Service {
     }
 
     _queryEdit(pageId) {
-        return this.ctx.mysql.query('select id,name,type,props,status from marketPageHistory where status=3 and pageId=@p0 limit 1', [pageId]);
+        return this.ctx.mysql.query('select id,name,props,status from marketPageHistory where status=3 and pageId=@p0 limit 1', [pageId]);
     }
 
     async _getHistoryId(pageId) {
@@ -228,15 +229,15 @@ class PageService extends Service {
             });
             results.push(result);
         } else if (historyId && status === 3) {
-            const connection = await this.ctx.mysql.connect();
-            results.push(
-                await connection.query('update marketPage a,marketPageHistory b set a.status=2,b.status=2,a.name=b.name,a.props=b.props where a.id={id} and b.pageId={id}', {
-                    id: pageId
-                })
-            );
-            results.push(await connection.query('delete from marketBricks where pageId=@p0', [pageId]));
-            results.push(await connection.query('insert into marketBricks (pageId,templateId,sort,data,props) select @p0,templateId,sort,data,props from marketBricksHistory where historyId=@p1', [pageId, historyId]));
-            connection.release();
+            await this.ctx.mysql.useTransaction(async (connection) => {
+                results.push(
+                    await connection.query('update marketPage a,marketPageHistory b set a.status=2,b.status=2,a.name=b.name,a.props=b.props where a.id={id} and b.pageId={id}', {
+                        id: pageId
+                    })
+                );
+                results.push(await connection.query('delete from marketBricks where pageId=@p0', [pageId]));
+                results.push(await connection.query('insert into marketBricks (pageId,templateId,sort,data,props) select @p0,templateId,sort,data,props from marketBricksHistory where historyId=@p1', [pageId, historyId]));
+            });
         } else {
             return PAGE_STATUS_ERROR;
         }
