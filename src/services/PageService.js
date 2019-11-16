@@ -1,10 +1,113 @@
 const { Service } = require('sonorpc');
 
+const PARAM_ERROR = { success: false, code: -140, message: '参数错误' };
 const PAGE_STATUS_ERROR = { success: false, code: 11000, message: '页面状态错误!' };
 const PAGE_NOT_EXISTS = { success: false, code: 11001, message: '页面不存在!' };
 
-
 class PageService extends Service {
+    async list({ id, name, type, status, sellerId, pageIndex, pageSize }) {
+        if (typeof pageSize !== 'number' || typeof pageIndex !== 'number') {
+            return PARAM_ERROR;
+        }
+
+        let i = 0;
+        let where = "1=1";
+        const start = Math.max(0, pageIndex - 1) * pageSize;
+        const args = [];
+
+        if (id) {
+            where += ' and id=@p' + i++;
+            args.push(id);
+        }
+
+        if (name) {
+            where += ' and name like CONCAT(\'%\',@p' + (i++) + ',\'%\')';
+            args.push(id);
+        }
+
+        if (status != null) {
+            where += ' and status=@p' + i++;
+            args.push(status);
+        }
+
+        if (type != null) {
+            where += ' and type=@p' + i++;
+            args.push(type);
+        }
+
+        if (sellerId != null) {
+            where += ' and sellerId=@p' + i++;
+            args.push(sellerId);
+        }
+
+        const rows = await this.ctx.mysql.query('select id,name,type,props,status,keyName,sellerId from marketPage where ' + where + ' limit ' + start + ',' + pageSize, args);
+
+        return { success: true, code: 1, data: rows };
+    }
+
+    async getPageByKeyName(keyName) {
+        if (typeof keyName !== 'string') {
+            return PARAM_ERROR;
+        }
+
+        const rows = await this.ctx.mysql.query('select id,name,type,props,status,sellerId from marketPage where keyName=@p0 limit 1', [keyName]);
+        const page = rows && rows[0];
+
+        if (page) {
+            const [bricks, templates] = await this._getBricksAndTemplates(page.id);
+            page.bricks = bricks;
+            page.templates = templates;
+        }
+
+        return { success: true, code: 1, data: page };
+    }
+
+    async getPageById(pageId) {
+        if (typeof pageId !== 'number') {
+            return PARAM_ERROR;
+        }
+
+        const rows = await this.ctx.mysql.query('select id,name,type,props,status,sellerId from marketPage where id=@p0', [pageId]);
+        const page = rows && rows[0];
+
+        if (page) {
+            const [bricks, templates] = await this._getBricksAndTemplates(page.id);
+            page.bricks = bricks;
+            page.templates = templates;
+        }
+
+        return { success: true, code: 1, data: page };
+    }
+
+    async _getBricksAndTemplates(pageId) {
+        const bricks = await this.ctx.mysql.query('select id,pageId,templateId,sort,props,data from marketBricks where pageId=@p0', [pageId]);
+        let templates;
+        if (bricks) {
+            templates = await this.ctx.mysql.query('select id,name,type,html,css,props from marketTemplate where id in (' + bricks.map((brick) => brick.templateId).join(',') + ')');
+        }
+        return [bricks || [], templates || []];
+    }
+
+    async addPage(type, name, sellerId) {
+        const result = await this.ctx.mysql.insert('marketPage', {
+            type,
+            name,
+            sellerId,
+            status: 1
+        });
+
+        return { success: true, code: 1, id: result.insertId };
+    }
+
+    async editPage(pageId, sellerId) {
+        const result = await this.ctx.mysql.query('select id,name,type,props,status,keyName from marketPage where status!=0 and id=@p0 and sellerId=@p1 limit 1', [pageId, sellerId]);
+
+        if (!result || !result[0]) {
+            return PAGE_STATUS_ERROR;
+        }
+
+        return this._editPage(result[0]);
+    }
 
     async editHome() {
         let result = await this._queryHome();
@@ -15,6 +118,7 @@ class PageService extends Service {
                 type: 1,
                 props: null,
                 status: 1,
+                sellerId: 0,
                 keyName: 'home'
             };
             const res = await this.ctx.mysql.insert('marketPage', page);
@@ -24,9 +128,12 @@ class PageService extends Service {
             }
         }
 
-        const data = result[0];
+        return this._editPage(result[0]);
+    }
+
+    async _editPage(data) {
         if (data.status == 3) {
-            const rows = await this._queryEdit(data.id);
+            const rows = await this._queryEditingPage(data.id);
             if (!rows || !rows[0]) {
                 return PAGE_STATUS_ERROR;
             }
@@ -52,7 +159,6 @@ class PageService extends Service {
                 data.historyId = history.insertId;
             });
         }
-
         return { success: true, code: 1, data };
     }
 
@@ -60,7 +166,7 @@ class PageService extends Service {
         return this.ctx.mysql.query('select id,name,type,props,status,keyName from marketPage where status!=0 and type=1 and keyName=\'home\' limit 1');
     }
 
-    _queryEdit(pageId) {
+    _queryEditingPage(pageId) {
         return this.ctx.mysql.query('select id,name,props,status from marketPageHistory where status=3 and pageId=@p0 limit 1', [pageId]);
     }
 
@@ -206,7 +312,7 @@ class PageService extends Service {
                 name: pageName
             });
             results = await Promise.all(sortings.map(({ id, sort }) => (
-                this.ctx.mysql.query('update marketPageHistory set sort={sort} where id={id}', {
+                this.ctx.mysql.query('update marketBricksHistory set sort={sort} where id={id}', {
                     id,
                     sort
                 })

@@ -1,7 +1,7 @@
 const { Service } = require('sonorpc');
 
 class TemplateService extends Service {
-    async getTemplates({ name, status, groupId }) {
+    async getTemplates({ name, status, groupId, pageType }) {
         let i = 0;
         let where = '1=1';
         let vals = [];
@@ -21,8 +21,13 @@ class TemplateService extends Service {
             vals.push(groupId);
         }
 
+        if (pageType) {
+            where += ' and FIND_IN_SET(@p' + (i++) + ',supportPageTypes)!=0';
+            vals.push(pageType);
+        }
+
         const res = await this.ctx.mysql.query(`select id,name,type,supportPageTypes,image,preview,html,css,sorting,groupId,props from marketTemplate where ${where} order by sorting desc`, vals);
-        return { success: true, data: res };
+        return { success: true, code: 1, data: res };
     }
 
     async addTemplate({

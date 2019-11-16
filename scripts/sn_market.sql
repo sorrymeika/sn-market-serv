@@ -1,15 +1,16 @@
 --# mysql -u root -p
 --# Enter password: 12345Qwert
 
--- 创建数据库
-create database if not exists sn_market;
-
 -- 创建用户
 create user 'dev'@'localhost' identified by '12345Qwert';
 
 -- 设置用户密码等级
 ALTER USER 'dev'@'localhost' IDENTIFIED WITH mysql_native_password BY '12345Qwert';
 FLUSH PRIVILEGES;
+
+
+-- 创建数据库
+create database if not exists sn_market;
 
 -- 分配权限
 grant ALL on sn_market.* to 'dev'@'localhost';
@@ -55,14 +56,8 @@ create table marketPage (
     props json,
     status int(2), -- enum { 0: '虚拟删除', 1: '新建', 2: '发布', 3: '编辑中' }
     keyName varchar(30), -- 路由
-    unique keyIndex (keyName)
-);
-
--- 页面、商户关联表
-create table sellerPageRel (
-    id int(10) primary key auto_increment,
-    pageId int(10) not null,
-    sellerId int(10) not null
+    unique keyIndex (keyName),
+    sellerId int(10)
 );
 
 -- 页面数据表
