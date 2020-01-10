@@ -1,1 +1,1 @@
-require('../src/services')();
+require('../src/application').start();

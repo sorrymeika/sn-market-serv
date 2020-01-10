@@ -9,4 +9,4 @@ const ln = (moduleName) => {
 ln('sonorpc');
 ln('sonorpc-mysql');
 
-require('../src/services')();
+require('../src/application').start();

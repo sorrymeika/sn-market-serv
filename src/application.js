@@ -2,7 +2,7 @@ const { createProvider } = require('sonorpc');
 const MySQL = require('sonorpc-mysql');
 const Redis = require('ioredis');
 
-const config = require('../config');
+const config = require('./config');
 
 // MySQL配置
 const mysql = new MySQL(config.mysql);
@@ -10,22 +10,24 @@ const mysql = new MySQL(config.mysql);
 // Redis配置
 const redis = new Redis(config.redis);
 
-const ctx = {
+const application = {
     mysql,
     redis
 };
 
-module.exports = function start() {
+exports.start = function start() {
     return createProvider({
         name: 'market',
-        ctx,
         port: 3007,
         registry: {
             port: 3006
         },
-        serviceClasses: [
-            require('./PageService'),
-            require('./TemplateService')
+        extentions: {
+            application
+        },
+        services: [
+            require('./services/PageService'),
+            require('./services/TemplateService')
         ]
     })
         .start();

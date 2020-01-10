@@ -26,7 +26,7 @@ class TemplateService extends Service {
             vals.push(pageType);
         }
 
-        const res = await this.ctx.mysql.query(`select id,name,type,supportPageTypes,image,preview,html,css,sorting,groupId,props from marketTemplate where ${where} order by sorting desc`, vals);
+        const res = await this.app.mysql.query(`select id,name,type,supportPageTypes,image,preview,html,css,sorting,groupId,props from marketTemplate where ${where} order by sorting desc`, vals);
         return { success: true, code: 1, data: res };
     }
 
@@ -43,7 +43,7 @@ class TemplateService extends Service {
         groupId,
         props
     }) {
-        const res = await this.ctx.mysql.insert('marketTemplate', {
+        const res = await this.app.mysql.insert('marketTemplate', {
             name,
             description,
             type,
@@ -74,7 +74,7 @@ class TemplateService extends Service {
             groupId,
             props,
         } = data;
-        const res = this.ctx.mysql.query(
+        const res = this.app.mysql.query(
             `update marketTemplate set 
                 name={name},
                 description={description},
@@ -104,7 +104,7 @@ class TemplateService extends Service {
     }
 
     deleteById(templateId) {
-        const res = this.ctx.mysql.query('update marketTemplate set status=0 where id=@p0', [templateId]);
+        const res = this.app.mysql.query('update marketTemplate set status=0 where id=@p0', [templateId]);
         return { success: true, data: res };
     }
 }
