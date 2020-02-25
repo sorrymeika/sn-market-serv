@@ -4,7 +4,6 @@
         "rm -rf ./node_modules/sonorpc-mysql",
         "npm install",
         "ln -s /data/common/sonorpc ./node_modules/sonorpc",
-        "ln -s /data/common/sonorpc-mysql ./node_modules/sonorpc-mysql",
         "pm2 stop market_service",
         "pm2 start scripts/start.js --name market_service"
     ],
@@ -15,7 +14,7 @@
         },
         {
             "template": "config.js",
-            "destFile": "src/config.js"
+            "destFile": "app/config.js"
         }
     ]
 }

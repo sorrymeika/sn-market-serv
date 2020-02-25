@@ -7,6 +7,5 @@ const ln = (moduleName) => {
 };
 
 ln('sonorpc');
-ln('sonorpc-mysql');
 
-require('../src/application').start();
+require('sonorpc').startProvider();

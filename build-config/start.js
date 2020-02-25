@@ -1,1 +1,1 @@
-require('../src/application').start();
+require('sonorpc').startProvider();
